@@ -2,5 +2,5 @@ streamlit
 tensorflow
 numpy
 pillow
-opencv-python
 streamlit-drawable-canvas
+protobuf==3.20.*
