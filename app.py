@@ -3,22 +3,25 @@ import numpy as np
 from tensorflow.keras.models import load_model
 from streamlit_drawable_canvas import st_canvas
 from PIL import Image, ImageOps
-import pickle
+
 
 # -----------------------------
-# Load model & labels
+# Load Model (cached)
 # -----------------------------
 @st.cache_resource
 def load_cnn_model():
     return load_model("emnist_cnn_model.h5")
 
-@st.cache_resource
-def load_labels():
-    with open("label_map.pkl", "rb") as f:
-        return pickle.load(f)
 
 model = load_cnn_model()
-label_map = load_labels()
+
+
+# -----------------------------
+# Label Map
+# (Digits + Capital Letters)
+# -----------------------------
+LABELS = list("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
 
 # -----------------------------
 # Streamlit UI
@@ -41,24 +44,28 @@ canvas_result = st_canvas(
 
 predict_btn = st.button("Predict")
 
+
 # -----------------------------
 # Prediction
 # -----------------------------
 if predict_btn and canvas_result.image_data is not None:
-    
+
     # Convert RGBA → grayscale PIL image
     img = Image.fromarray(canvas_result.image_data.astype("uint8")).convert("L")
+
+    # Invert → white text on black background
+    img = ImageOps.invert(img)
+
+    # Improve contrast (helps recognition)
+    img = ImageOps.autocontrast(img)
 
     # Resize to 28×28
     img = img.resize((28, 28))
 
-    # Invert colors (white writing on black bg)
-    img = ImageOps.invert(img)
-
-    # Convert to NumPy array
+    # Convert to NumPy
     img = np.array(img)
 
-    # Normalize
+    # Normalize (0–1)
     img = img / 255.0
 
     # Reshape for CNN
@@ -66,10 +73,11 @@ if predict_btn and canvas_result.image_data is not None:
 
     # Predict
     pred = model.predict(img)
-    prob = np.max(pred)
-    idx = np.argmax(pred)
+    prob = float(np.max(pred))
+    idx = int(np.argmax(pred))
 
-    char = label_map[idx]
+    char = LABELS[idx]
 
+    # Display results
     st.subheader(f"Prediction: **{char}**")
     st.write(f"Confidence: `{prob*100:.2f}%`")
