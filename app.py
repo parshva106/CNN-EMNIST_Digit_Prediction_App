@@ -61,12 +61,15 @@ if predict_btn and canvas_result.image_data is not None:
 
     pred = model.predict(img)
 
-    idx = int(np.argmax(pred))      # CLASS INDEX
-    prob = float(np.max(pred))      # CONFIDENCE
+    idx = int(np.argmax(pred))
+    prob = float(np.max(pred))
+    char = LABELS[idx]
 
-    char = LABELS[idx]              # MAP TO REAL LABEL
+    st.write("🔍 DEBUG INFO")
+    st.write("Index:", idx)
+    st.write("Label from LABELS:", char)
+    st.write("First 20 labels:", LABELS[:20])
+    st.write("Total labels:", len(LABELS))
 
     st.subheader(f"Prediction: **{char}**")
     st.write(f"Confidence: `{prob*100:.2f}%`")
-
-    st.caption(f"Raw class index: {idx}")
