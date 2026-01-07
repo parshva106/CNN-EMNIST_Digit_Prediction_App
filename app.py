@@ -21,11 +21,11 @@ def load_labels():
 
 
 model = load_cnn_model()
-LABELS = load_labels()     # ← IMPORTANT
+LABELS = load_labels()
 
 
 # -----------------------------
-# Streamlit UI
+# UI
 # -----------------------------
 st.set_page_config(page_title="Handwritten Character Recognition")
 
@@ -51,33 +51,22 @@ predict_btn = st.button("Predict")
 # -----------------------------
 if predict_btn and canvas_result.image_data is not None:
 
-    # Convert RGBA → grayscale PIL image
     img = Image.fromarray(canvas_result.image_data.astype("uint8")).convert("L")
-
-    # Invert → white text on black background
     img = ImageOps.invert(img)
-
-    # Improve contrast
     img = ImageOps.autocontrast(img)
-
-    # Resize to 28×28
     img = img.resize((28, 28))
 
-    # Convert to NumPy
-    img = np.array(img)
-
-    # Normalize
-    img = img / 255.0
-
-    # Reshape for CNN
+    img = np.array(img) / 255.0
     img = img.reshape(1, 28, 28, 1)
 
-    # Predict
     pred = model.predict(img)
-    prob = float(np.max(pred))
-    idx = int(np.argmax(pred))
 
-    char = LABELS[idx]
+    idx = int(np.argmax(pred))      # CLASS INDEX
+    prob = float(np.max(pred))      # CONFIDENCE
+
+    char = LABELS[idx]              # MAP TO REAL LABEL
 
     st.subheader(f"Prediction: **{char}**")
     st.write(f"Confidence: `{prob*100:.2f}%`")
+
+    st.caption(f"Raw class index: {idx}")
