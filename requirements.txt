@@ -1,6 +1,5 @@
 streamlit
-tensorflow
+tensorflow-cpu
 numpy
 pillow
 streamlit-drawable-canvas
-protobuf==3.20.*
