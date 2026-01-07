@@ -3,33 +3,25 @@ import numpy as np
 from tensorflow.keras.models import load_model
 from streamlit_drawable_canvas import st_canvas
 from PIL import Image, ImageOps
+import pickle
 
 
 # -----------------------------
-# Load Model (cached)
+# Load Model & Labels
 # -----------------------------
 @st.cache_resource
 def load_cnn_model():
     return load_model("emnist_cnn_model.h5")
 
 
+@st.cache_resource
+def load_labels():
+    with open("label_map.pkl", "rb") as f:
+        return pickle.load(f)
+
+
 model = load_cnn_model()
-
-
-# -----------------------------
-# Label Map
-# (Digits + Capital Letters)
-# -----------------------------
-LABELS = [
-'0','1','2','3','4','5','6','7','8','9',
-'A','B','C','D','E','F','G','H','I','J',
-'K','L','M','N','O','P','Q','R','S','T',
-'U','V','W','X','Y','Z',
-'a','b','c','d','e','f','g','h','i','j',
-'k','l','m','n','o','p','q','r','s','t',
-'u','v','w','x','y','z'
-]
-
+LABELS = load_labels()     # ← IMPORTANT
 
 
 # -----------------------------
@@ -65,7 +57,7 @@ if predict_btn and canvas_result.image_data is not None:
     # Invert → white text on black background
     img = ImageOps.invert(img)
 
-    # Improve contrast (helps recognition)
+    # Improve contrast
     img = ImageOps.autocontrast(img)
 
     # Resize to 28×28
@@ -74,7 +66,7 @@ if predict_btn and canvas_result.image_data is not None:
     # Convert to NumPy
     img = np.array(img)
 
-    # Normalize (0–1)
+    # Normalize
     img = img / 255.0
 
     # Reshape for CNN
@@ -87,6 +79,5 @@ if predict_btn and canvas_result.image_data is not None:
 
     char = LABELS[idx]
 
-    # Display results
     st.subheader(f"Prediction: **{char}**")
     st.write(f"Confidence: `{prob*100:.2f}%`")
